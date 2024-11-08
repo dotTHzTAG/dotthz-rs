@@ -12,7 +12,7 @@ pub struct DotthzFile {
 }
 
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct DotthzMetaData {
     pub user: String,
     pub email: String,
@@ -60,7 +60,17 @@ impl DotthzFile {
                 .attr("dsDescription")
                 .and_then(|a| a.read_raw::<VarLenUnicode>())
             {
-                for (i, description) in ds_description.iter().enumerate() {
+
+                // Convert ds_description to a vector of strings, splitting any single entry by ", "
+                let descriptions: Vec<String> = if ds_description.len() == 1 {
+                    // If there's only one entry, split it by ", "
+                    ds_description[0].split(", ").map(|s| s.to_string()).collect()
+                } else {
+                    // Otherwise, assume it's already in the correct format
+                    ds_description.iter().map(|s| s.to_string()).collect()
+                };
+
+                for (i, description) in descriptions.iter().enumerate() {
                     // Read datasets and populate DataContainer fields, skipping any that are missing
                     if let Ok(ds) = group.dataset(format!("ds{}", i + 1).as_str()).and_then(|d| d.read_2d()) {
                         measurement.datasets.insert(description.to_string(), ds);
@@ -100,7 +110,16 @@ impl DotthzFile {
                 .attr("mdDescription")
                 .and_then(|a| a.read_raw::<VarLenUnicode>())
             {
-                for (i, description) in md_description.iter().enumerate() {
+                // Convert ds_description to a vector of strings, splitting any single entry by ", "
+                let descriptions: Vec<String> = if md_description.len() == 1 {
+                    // If there's only one entry, split it by ", "
+                    md_description[0].split(", ").map(|s| s.to_string()).collect()
+                } else {
+                    // Otherwise, assume it's already in the correct format
+                    md_description.iter().map(|s| s.to_string()).collect()
+                };
+                
+                for (i, description) in descriptions.iter().enumerate() {
                     // now read the mds
                     if let Ok(md) = group.attr(format!("md{}", i + 1).as_str()).and_then(|a| a.read_raw::<f32>()) {
                         if let Some(meta_data) = md.first() {
@@ -178,13 +197,24 @@ impl DotthzFile {
             let group = wtr.create_group(&group_name).unwrap();
 
             // write description of datasets as attribute
-            let data = measurement.datasets.keys().map(|k| VarLenUnicode::from_str(k).unwrap()).collect::<Vec<VarLenUnicode>>();
+            // Join the dataset keys into a single comma-separated string
+            let data = measurement.datasets
+                .keys()
+                .map(|k| k.as_str())
+                .collect::<Vec<&str>>()
+                .join(", ");
+
+            // Create a single VarLenUnicode instance from the joined string
+            let varlen_data = VarLenUnicode::from_str(&data).unwrap();
+            
+            // Define the attribute with a shape of 1 (single entry) and write the joined data
             let attr = group
                 .new_attr::<VarLenUnicode>()
-                .shape(measurement.datasets.len())
+                .shape(1)
                 .create("dsDescription")?;
-            // write the attr data
-            attr.write(&data)?;
+
+            // Write the single VarLenUnicode entry as the attribute data
+            attr.write(&[varlen_data])?;
 
             // write all datasets
             for (i, (_name, dataset)) in measurement.datasets.iter().enumerate() {
@@ -208,13 +238,25 @@ impl DotthzFile {
             attr.write_scalar(&entry)?;
 
             // write description of md as attribute
-            let data = measurement.meta_data.md.keys().map(|k| VarLenUnicode::from_str(k).unwrap()).collect::<Vec<VarLenUnicode>>();
+            // Join the dataset keys into a single comma-separated string
+            let data = measurement.meta_data.md
+                .keys()
+                .map(|k| k.as_str())
+                .collect::<Vec<&str>>()
+                .join(", ");
+
+            // Create a single VarLenUnicode instance from the joined string
+            let varlen_data = VarLenUnicode::from_str(&data).unwrap();
+
+            // Define the attribute with a shape of 1 (single entry) and write the joined data
             let attr = group
                 .new_attr::<VarLenUnicode>()
-                .shape(measurement.datasets.len())
+                .shape(1)
                 .create("mdDescription")?;
-            // write the attr data
-            attr.write(&data)?;
+
+            // Write the single VarLenUnicode entry as the attribute data
+            attr.write(&[varlen_data])?;
+
 
             // write all mds
             for (i, (_name, md)) in measurement.meta_data.md.iter().enumerate() {
