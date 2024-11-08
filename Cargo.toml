@@ -2,11 +2,20 @@
 name = "dotthz-rs"
 version = "0.1.0"
 edition = "2021"
+authors = ["Linus Leo Stöckli"]
+# repository = ""
+description = "Crate to load and save dotThz files in rust."
+readme = "README.md"
+keywords = ["dotThz", "Thz-spectroscopy", "io"]
+categories = ["filesystem"]
+documentation = "https://docs.rs/dotthz-rs"
+#homepage = ""
+license = "Apache-2.0"
 
 [dependencies]
 ndarray = "0.16.1"
 ndarray-npy = "0.9.1"
-hdf5 = { package = "hdf5-metno", git = "https://github.com/metno/hdf5-rust" }
+hdf5 = { package = "hdf5-metno", version = "0.9.2"}
 chrono = "0.4.38"
 indexmap = "2.6.0"
 

@@ -1,3 +1,8 @@
+//! Crate to load and save dotThz files in rust.
+#![allow(dead_code)]
+#![deny(missing_docs)]
+#![deny(warnings)]
+
 mod dotthz;
 pub use dotthz::{DotthzFile, DotthzMeasurement, DotthzMetaData};
 

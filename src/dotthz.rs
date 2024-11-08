@@ -6,34 +6,63 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use indexmap::IndexMap;
 
+/// A structure representing a .thz file according to the dotThz standard
 #[derive(Default)]
 pub struct DotthzFile {
+    /// A map of group names to measurement data.
     pub groups: IndexMap<String, DotthzMeasurement>,
 }
 
 
+/// Metadata associated with a dotThz measurement.
 #[derive(Default, Debug)]
 pub struct DotthzMetaData {
+    /// The user responsible for the measurement.
     pub user: String,
+
+    /// The email of the user.
     pub email: String,
+
+    /// The ORCID identifier for the user.
     pub orcid: String,
+
+    /// The institution of the user.
     pub institution: String,
+
+    /// The description of the measurement.
     pub description: String,
+
+    /// Additional metadata stored as key-value pairs.
     pub md: IndexMap<String, String>,
+
+    /// dotThz version
     pub version: String,
+
+    /// The mode of measurement.
     pub mode: String,
+
+    /// The instrument used for measurement.
     pub instrument: String,
+
+    /// The time of measurement.
     pub time: String,
+
+    /// The date of measurement.
     pub date: String,
 }
 
+/// A structure representing a dotThz measurement containing datasets and metadata. (HDF5 group)
 #[derive(Default)]
 pub struct DotthzMeasurement {
+    /// A map of dataset names to data arrays.
     pub datasets: IndexMap<String, Array2<f32>>,
+
+    /// Metadata associated with the measurement.
     pub meta_data: DotthzMetaData,
 }
 
 impl DotthzFile {
+    /// Creates a new DotthzFile with the provided data and metadata.
     pub fn new(data: Array2<f32>, meta_data: DotthzMetaData) -> Self {
         let mut groups = IndexMap::new();
         let mut datasets = IndexMap::new();
@@ -44,6 +73,8 @@ impl DotthzFile {
         });
         DotthzFile { groups }
     }
+
+    /// Loads a DotthzFile from the specified path.
     pub fn load(path: PathBuf) -> Result<Self, Box<dyn Error>> {
         // Open the HDF5 file for reading
         let file = File::open(path.clone())?;
@@ -118,7 +149,7 @@ impl DotthzFile {
                     // Otherwise, assume it's already in the correct format
                     md_description.iter().map(|s| s.to_string()).collect()
                 };
-                
+
                 for (i, description) in descriptions.iter().enumerate() {
                     // now read the mds
                     if let Ok(md) = group.attr(format!("md{}", i + 1).as_str()).and_then(|a| a.read_raw::<f32>()) {
@@ -190,6 +221,8 @@ impl DotthzFile {
             groups,
         })
     }
+    
+    /// Saves the DotthzFile to the specified path.
     pub fn save_file(&self, path: PathBuf) -> Result<(), Box<dyn Error>> {
         let wtr = File::create(&path)?; // open for writing
 
@@ -206,7 +239,7 @@ impl DotthzFile {
 
             // Create a single VarLenUnicode instance from the joined string
             let varlen_data = VarLenUnicode::from_str(&data).unwrap();
-            
+
             // Define the attribute with a shape of 1 (single entry) and write the joined data
             let attr = group
                 .new_attr::<VarLenUnicode>()
