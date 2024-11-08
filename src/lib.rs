@@ -25,17 +25,17 @@ mod tests {
             let original_file_path = PathBuf::from(path);
 
             // Load data from the original file
-            let original_dotthz = DotthzFile::load(original_file_path.clone())?;
+            let original_dotthz = DotthzFile::load(&original_file_path)?;
 
             // Create a temporary file to save the copy
             let temp_file = NamedTempFile::new()?;
             let copy_file_path = temp_file.path().to_path_buf();
 
             // Save the data to the new temporary file
-            original_dotthz.save(copy_file_path.clone())?;
+            original_dotthz.save(&copy_file_path)?;
 
             // Load data from the new copy file
-            let copied_dotthz = DotthzFile::load(copy_file_path)?;
+            let copied_dotthz = DotthzFile::load(&copy_file_path)?;
 
             // Compare the original and copied Dotthz structures
             assert_eq!(original_dotthz.groups.len(), copied_dotthz.groups.len());
@@ -157,10 +157,10 @@ mod tests {
         let file_to_write = DotthzFile { groups };
 
         // Save to the temporary file
-        file_to_write.save(path.clone())?;
+        file_to_write.save(&path)?;
 
         // Load from the temporary file
-        let loaded_file = DotthzFile::load(path)?;
+        let loaded_file = DotthzFile::load(&path)?;
 
         // Compare original and loaded data
         assert_eq!(file_to_write.groups.len(), loaded_file.groups.len());

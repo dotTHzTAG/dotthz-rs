@@ -2,6 +2,8 @@ use hdf5::types::VarLenUnicode;
 use hdf5::File;
 use indexmap::IndexMap;
 use ndarray::Array2;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -14,7 +16,8 @@ pub struct DotthzFile {
 }
 
 /// Metadata associated with a dotThz measurement.
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct DotthzMetaData {
     /// The user responsible for the measurement.
     pub user: String,
@@ -61,8 +64,15 @@ pub struct DotthzMeasurement {
 }
 
 impl DotthzFile {
+    /// Creates a new empty DotthzFile
+    pub fn new() -> Self {
+        DotthzFile {
+            groups: IndexMap::new(),
+        }
+    }
+
     /// Creates a new DotthzFile with the provided data and metadata.
-    pub fn new(data: Array2<f32>, meta_data: DotthzMetaData) -> Self {
+    pub fn from(data: Array2<f32>, meta_data: DotthzMetaData) -> Self {
         let mut groups = IndexMap::new();
         let mut datasets = IndexMap::new();
         datasets.insert("ds1".to_string(), data);
@@ -77,7 +87,7 @@ impl DotthzFile {
     }
 
     /// Loads a DotthzFile from the specified path.
-    pub fn load(path: PathBuf) -> Result<Self, Box<dyn Error>> {
+    pub fn load(path: &PathBuf) -> Result<Self, Box<dyn Error>> {
         // Open the HDF5 file for reading
         let file = File::open(path.clone())?;
 
@@ -243,7 +253,7 @@ impl DotthzFile {
     }
 
     /// Saves the DotthzFile to the specified path.
-    pub fn save(&self, path: PathBuf) -> Result<(), Box<dyn Error>> {
+    pub fn save(&self, path: &PathBuf) -> Result<(), Box<dyn Error>> {
         let wtr = File::create(&path)?; // open for writing
 
         for (group_name, measurement) in self.groups.iter() {
