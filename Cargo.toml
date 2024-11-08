@@ -10,7 +10,7 @@ keywords = ["dotThz", "Thz-spectroscopy", "io"]
 categories = ["filesystem"]
 documentation = "https://docs.rs/dotthz-rs"
 #homepage = ""
-license = "Apache-2.0"
+license = "MIT"
 
 [dependencies]
 ndarray = "0.16"
