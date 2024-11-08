@@ -1,0 +1,14 @@
+[package]
+name = "dotthz-rs"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ndarray = "0.16.1"
+ndarray-npy = "0.9.1"
+hdf5 = { package = "hdf5-metno", git = "https://github.com/metno/hdf5-rust" }
+chrono = "0.4.38"
+indexmap = "2.6.0"
+
+[dev-dependencies]
+tempfile = "3.3"
