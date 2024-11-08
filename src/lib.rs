@@ -9,16 +9,18 @@ pub use dotthz::{DotthzFile, DotthzMeasurement, DotthzMetaData};
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::NamedTempFile;
-    use std::path::PathBuf;
-    use ndarray::array;
-    use indexmap::IndexMap;
     use dotthz::{DotthzFile, DotthzMeasurement, DotthzMetaData};
+    use indexmap::IndexMap;
+    use ndarray::array;
+    use std::path::PathBuf;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_copy_and_compare_dotthz_files() -> Result<(), Box<dyn std::error::Error>> {
-        for path in ["test_files/PVDF_520um.thz", "test_files/2_VariableTemperature.thz"] {
-
+        for path in [
+            "test_files/PVDF_520um.thz",
+            "test_files/2_VariableTemperature.thz",
+        ] {
             // Path to an existing test HDF5 file (replace this with an actual test file path)
             let original_file_path = PathBuf::from(path);
 
@@ -39,31 +41,77 @@ mod tests {
             assert_eq!(original_dotthz.groups.len(), copied_dotthz.groups.len());
 
             for (group_name, original_measurement) in &original_dotthz.groups {
-                let copied_measurement = copied_dotthz.groups.get(group_name).expect("Group not found");
+                let copied_measurement = copied_dotthz
+                    .groups
+                    .get(group_name)
+                    .expect("Group not found");
 
                 // Compare metadata
-                assert_eq!(original_measurement.meta_data.user, copied_measurement.meta_data.user);
-                assert_eq!(original_measurement.meta_data.email, copied_measurement.meta_data.email);
-                assert_eq!(original_measurement.meta_data.orcid, copied_measurement.meta_data.orcid);
-                assert_eq!(original_measurement.meta_data.institution, copied_measurement.meta_data.institution);
-                assert_eq!(original_measurement.meta_data.description, copied_measurement.meta_data.description);
-                assert_eq!(original_measurement.meta_data.version, copied_measurement.meta_data.version);
-                assert_eq!(original_measurement.meta_data.mode, copied_measurement.meta_data.mode);
-                assert_eq!(original_measurement.meta_data.instrument, copied_measurement.meta_data.instrument);
-                assert_eq!(original_measurement.meta_data.time, copied_measurement.meta_data.time);
-                assert_eq!(original_measurement.meta_data.date, copied_measurement.meta_data.date);
+                assert_eq!(
+                    original_measurement.meta_data.user,
+                    copied_measurement.meta_data.user
+                );
+                assert_eq!(
+                    original_measurement.meta_data.email,
+                    copied_measurement.meta_data.email
+                );
+                assert_eq!(
+                    original_measurement.meta_data.orcid,
+                    copied_measurement.meta_data.orcid
+                );
+                assert_eq!(
+                    original_measurement.meta_data.institution,
+                    copied_measurement.meta_data.institution
+                );
+                assert_eq!(
+                    original_measurement.meta_data.description,
+                    copied_measurement.meta_data.description
+                );
+                assert_eq!(
+                    original_measurement.meta_data.version,
+                    copied_measurement.meta_data.version
+                );
+                assert_eq!(
+                    original_measurement.meta_data.mode,
+                    copied_measurement.meta_data.mode
+                );
+                assert_eq!(
+                    original_measurement.meta_data.instrument,
+                    copied_measurement.meta_data.instrument
+                );
+                assert_eq!(
+                    original_measurement.meta_data.time,
+                    copied_measurement.meta_data.time
+                );
+                assert_eq!(
+                    original_measurement.meta_data.date,
+                    copied_measurement.meta_data.date
+                );
 
                 // Compare the metadata's key-value pairs
-                assert_eq!(original_measurement.meta_data.md.len(), copied_measurement.meta_data.md.len());
+                assert_eq!(
+                    original_measurement.meta_data.md.len(),
+                    copied_measurement.meta_data.md.len()
+                );
                 for (key, original_value) in &original_measurement.meta_data.md {
-                    let copied_value = copied_measurement.meta_data.md.get(key).expect("Metadata key not found");
+                    let copied_value = copied_measurement
+                        .meta_data
+                        .md
+                        .get(key)
+                        .expect("Metadata key not found");
                     assert_eq!(original_value, copied_value);
                 }
 
                 // Compare datasets
-                assert_eq!(original_measurement.datasets.len(), copied_measurement.datasets.len());
+                assert_eq!(
+                    original_measurement.datasets.len(),
+                    copied_measurement.datasets.len()
+                );
                 for (dataset_name, original_dataset) in &original_measurement.datasets {
-                    let copied_dataset = copied_measurement.datasets.get(dataset_name).expect("Dataset not found");
+                    let copied_dataset = copied_measurement
+                        .datasets
+                        .get(dataset_name)
+                        .expect("Dataset not found");
                     assert_eq!(original_dataset, copied_dataset);
                 }
             }
@@ -87,7 +135,9 @@ mod tests {
             orcid: "0000-0001-2345-6789".to_string(),
             institution: "Test Institute".to_string(),
             description: "Test description".to_string(),
-            md: [("md1".to_string(), "Thickness (mm)".to_string())].into_iter().collect(),
+            md: [("md1".to_string(), "Thickness (mm)".to_string())]
+                .into_iter()
+                .collect(),
             version: "1.0".to_string(),
             mode: "Test mode".to_string(),
             instrument: "Test instrument".to_string(),
@@ -119,28 +169,71 @@ mod tests {
             let loaded_measurement = loaded_file.groups.get(group_name).expect("Group not found");
 
             // Compare metadata
-            assert_eq!(measurement.meta_data.user, loaded_measurement.meta_data.user);
-            assert_eq!(measurement.meta_data.email, loaded_measurement.meta_data.email);
-            assert_eq!(measurement.meta_data.orcid, loaded_measurement.meta_data.orcid);
-            assert_eq!(measurement.meta_data.institution, loaded_measurement.meta_data.institution);
-            assert_eq!(measurement.meta_data.description, loaded_measurement.meta_data.description);
-            assert_eq!(measurement.meta_data.version, loaded_measurement.meta_data.version);
-            assert_eq!(measurement.meta_data.mode, loaded_measurement.meta_data.mode);
-            assert_eq!(measurement.meta_data.instrument, loaded_measurement.meta_data.instrument);
-            assert_eq!(measurement.meta_data.time, loaded_measurement.meta_data.time);
-            assert_eq!(measurement.meta_data.date, loaded_measurement.meta_data.date);
+            assert_eq!(
+                measurement.meta_data.user,
+                loaded_measurement.meta_data.user
+            );
+            assert_eq!(
+                measurement.meta_data.email,
+                loaded_measurement.meta_data.email
+            );
+            assert_eq!(
+                measurement.meta_data.orcid,
+                loaded_measurement.meta_data.orcid
+            );
+            assert_eq!(
+                measurement.meta_data.institution,
+                loaded_measurement.meta_data.institution
+            );
+            assert_eq!(
+                measurement.meta_data.description,
+                loaded_measurement.meta_data.description
+            );
+            assert_eq!(
+                measurement.meta_data.version,
+                loaded_measurement.meta_data.version
+            );
+            assert_eq!(
+                measurement.meta_data.mode,
+                loaded_measurement.meta_data.mode
+            );
+            assert_eq!(
+                measurement.meta_data.instrument,
+                loaded_measurement.meta_data.instrument
+            );
+            assert_eq!(
+                measurement.meta_data.time,
+                loaded_measurement.meta_data.time
+            );
+            assert_eq!(
+                measurement.meta_data.date,
+                loaded_measurement.meta_data.date
+            );
 
             // Compare mds
-            assert_eq!(measurement.meta_data.md.len(), loaded_measurement.meta_data.md.len());
+            assert_eq!(
+                measurement.meta_data.md.len(),
+                loaded_measurement.meta_data.md.len()
+            );
             for (dataset_name, dataset) in &measurement.meta_data.md {
-                let loaded_dataset = loaded_measurement.meta_data.md.get(dataset_name).expect("Md not found");
+                let loaded_dataset = loaded_measurement
+                    .meta_data
+                    .md
+                    .get(dataset_name)
+                    .expect("Md not found");
                 assert_eq!(dataset, loaded_dataset);
             }
 
             // Compare datasets
-            assert_eq!(measurement.datasets.len(), loaded_measurement.datasets.len());
+            assert_eq!(
+                measurement.datasets.len(),
+                loaded_measurement.datasets.len()
+            );
             for (dataset_name, dataset) in &measurement.datasets {
-                let loaded_dataset = loaded_measurement.datasets.get(dataset_name).expect("Dataset not found");
+                let loaded_dataset = loaded_measurement
+                    .datasets
+                    .get(dataset_name)
+                    .expect("Dataset not found");
                 assert_eq!(dataset, loaded_dataset);
             }
         }

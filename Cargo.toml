@@ -9,13 +9,13 @@ readme = "README.md"
 keywords = ["dotThz", "Thz-spectroscopy", "io"]
 categories = ["filesystem"]
 documentation = "https://docs.rs/dotthz-rs"
-#homepage = ""
+# homepage = ""
 license = "MIT"
 
 [dependencies]
 ndarray = "0.16"
 ndarray-npy = "0.9"
-hdf5 = { package = "hdf5-metno", version = "0.9"}
+hdf5 = { package = "hdf5-metno", version = "0.9" }
 chrono = "0.4"
 indexmap = "2.6"
 

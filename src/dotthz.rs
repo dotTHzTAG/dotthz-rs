@@ -1,10 +1,10 @@
 use hdf5::types::VarLenUnicode;
 use hdf5::File;
+use indexmap::IndexMap;
 use ndarray::Array2;
 use std::error::Error;
 use std::path::PathBuf;
 use std::str::FromStr;
-use indexmap::IndexMap;
 
 /// A structure representing a .thz file according to the dotThz standard
 #[derive(Default)]
@@ -12,7 +12,6 @@ pub struct DotthzFile {
     /// A map of group names to measurement data.
     pub groups: IndexMap<String, DotthzMeasurement>,
 }
-
 
 /// Metadata associated with a dotThz measurement.
 #[derive(Default, Debug)]
@@ -67,10 +66,13 @@ impl DotthzFile {
         let mut groups = IndexMap::new();
         let mut datasets = IndexMap::new();
         datasets.insert("ds1".to_string(), data);
-        groups.insert("Measurement 1".to_string(), DotthzMeasurement {
-            datasets,
-            meta_data,
-        });
+        groups.insert(
+            "Measurement 1".to_string(),
+            DotthzMeasurement {
+                datasets,
+                meta_data,
+            },
+        );
         DotthzFile { groups }
     }
 
@@ -91,11 +93,13 @@ impl DotthzFile {
                 .attr("dsDescription")
                 .and_then(|a| a.read_raw::<VarLenUnicode>())
             {
-
                 // Convert ds_description to a vector of strings, splitting any single entry by ", "
                 let descriptions: Vec<String> = if ds_description.len() == 1 {
                     // If there's only one entry, split it by ", "
-                    ds_description[0].split(", ").map(|s| s.to_string()).collect()
+                    ds_description[0]
+                        .split(", ")
+                        .map(|s| s.to_string())
+                        .collect()
                 } else {
                     // Otherwise, assume it's already in the correct format
                     ds_description.iter().map(|s| s.to_string()).collect()
@@ -103,7 +107,10 @@ impl DotthzFile {
 
                 for (i, description) in descriptions.iter().enumerate() {
                     // Read datasets and populate DataContainer fields, skipping any that are missing
-                    if let Ok(ds) = group.dataset(format!("ds{}", i + 1).as_str()).and_then(|d| d.read_2d()) {
+                    if let Ok(ds) = group
+                        .dataset(format!("ds{}", i + 1).as_str())
+                        .and_then(|d| d.read_2d())
+                    {
                         measurement.datasets.insert(description.to_string(), ds);
                     }
                 }
@@ -144,7 +151,10 @@ impl DotthzFile {
                 // Convert ds_description to a vector of strings, splitting any single entry by ", "
                 let descriptions: Vec<String> = if md_description.len() == 1 {
                     // If there's only one entry, split it by ", "
-                    md_description[0].split(", ").map(|s| s.to_string()).collect()
+                    md_description[0]
+                        .split(", ")
+                        .map(|s| s.to_string())
+                        .collect()
                 } else {
                     // Otherwise, assume it's already in the correct format
                     md_description.iter().map(|s| s.to_string()).collect()
@@ -152,14 +162,26 @@ impl DotthzFile {
 
                 for (i, description) in descriptions.iter().enumerate() {
                     // now read the mds
-                    if let Ok(md) = group.attr(format!("md{}", i + 1).as_str()).and_then(|a| a.read_raw::<f32>()) {
+                    if let Ok(md) = group
+                        .attr(format!("md{}", i + 1).as_str())
+                        .and_then(|a| a.read_raw::<f32>())
+                    {
                         if let Some(meta_data) = md.first() {
-                            measurement.meta_data.md.insert(description.to_string(), format!("{}", meta_data));
+                            measurement
+                                .meta_data
+                                .md
+                                .insert(description.to_string(), format!("{}", meta_data));
                         }
                     }
-                    if let Ok(md) = group.attr(format!("md{}", i + 1).as_str()).and_then(|a| a.read_raw::<VarLenUnicode>()) {
+                    if let Ok(md) = group
+                        .attr(format!("md{}", i + 1).as_str())
+                        .and_then(|a| a.read_raw::<VarLenUnicode>())
+                    {
                         if let Some(meta_data) = md.first() {
-                            measurement.meta_data.md.insert(description.to_string(), format!("{}", meta_data));
+                            measurement
+                                .meta_data
+                                .md
+                                .insert(description.to_string(), format!("{}", meta_data));
                         }
                     }
                 }
@@ -217,11 +239,9 @@ impl DotthzFile {
             }
             groups.insert(group_name, measurement);
         }
-        Ok(DotthzFile {
-            groups,
-        })
+        Ok(DotthzFile { groups })
     }
-    
+
     /// Saves the DotthzFile to the specified path.
     pub fn save(&self, path: PathBuf) -> Result<(), Box<dyn Error>> {
         let wtr = File::create(&path)?; // open for writing
@@ -231,7 +251,8 @@ impl DotthzFile {
 
             // write description of datasets as attribute
             // Join the dataset keys into a single comma-separated string
-            let data = measurement.datasets
+            let data = measurement
+                .datasets
                 .keys()
                 .map(|k| k.as_str())
                 .collect::<Vec<&str>>()
@@ -272,7 +293,9 @@ impl DotthzFile {
 
             // write description of md as attribute
             // Join the dataset keys into a single comma-separated string
-            let data = measurement.meta_data.md
+            let data = measurement
+                .meta_data
+                .md
                 .keys()
                 .map(|k| k.as_str())
                 .collect::<Vec<&str>>()
@@ -290,15 +313,18 @@ impl DotthzFile {
             // Write the single VarLenUnicode entry as the attribute data
             attr.write(&[varlen_data])?;
 
-
             // write all mds
             for (i, (_name, md)) in measurement.meta_data.md.iter().enumerate() {
                 if let Ok(number) = f32::from_str(md) {
-                    let attr = group.new_attr::<f32>().create(format!("md{}", i + 1).as_str())?;
+                    let attr = group
+                        .new_attr::<f32>()
+                        .create(format!("md{}", i + 1).as_str())?;
                     attr.write_scalar(&number)?; // thickness in mm
                 } else {
                     let entry = VarLenUnicode::from_str(md).unwrap();
-                    let attr = group.new_attr::<VarLenUnicode>().create(format!("md{}", i + 1).as_str())?;
+                    let attr = group
+                        .new_attr::<VarLenUnicode>()
+                        .create(format!("md{}", i + 1).as_str())?;
                     attr.write_scalar(&entry)?;
                 }
             }
@@ -318,11 +344,14 @@ impl DotthzFile {
             let entry = VarLenUnicode::from_str(
                 format!(
                     "{}/{}/{}/{}",
-                    measurement.meta_data.orcid, measurement.meta_data.user, measurement.meta_data.email, measurement.meta_data.institution
+                    measurement.meta_data.orcid,
+                    measurement.meta_data.user,
+                    measurement.meta_data.email,
+                    measurement.meta_data.institution
                 )
-                    .as_str(),
+                .as_str(),
             )
-                .unwrap();
+            .unwrap();
 
             let attr = group.new_attr::<VarLenUnicode>().create("user")?;
             attr.write_scalar(&entry)?;
