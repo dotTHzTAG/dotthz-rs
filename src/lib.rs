@@ -30,7 +30,7 @@ mod tests {
             let copy_file_path = temp_file.path().to_path_buf();
 
             // Save the data to the new temporary file
-            original_dotthz.save_file(copy_file_path.clone())?;
+            original_dotthz.save(copy_file_path.clone())?;
 
             // Load data from the new copy file
             let copied_dotthz = DotthzFile::load(copy_file_path)?;
@@ -107,7 +107,7 @@ mod tests {
         let file_to_write = DotthzFile { groups };
 
         // Save to the temporary file
-        file_to_write.save_file(path.clone())?;
+        file_to_write.save(path.clone())?;
 
         // Load from the temporary file
         let loaded_file = DotthzFile::load(path)?;

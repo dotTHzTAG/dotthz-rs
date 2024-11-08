@@ -223,7 +223,7 @@ impl DotthzFile {
     }
     
     /// Saves the DotthzFile to the specified path.
-    pub fn save_file(&self, path: PathBuf) -> Result<(), Box<dyn Error>> {
+    pub fn save(&self, path: PathBuf) -> Result<(), Box<dyn Error>> {
         let wtr = File::create(&path)?; // open for writing
 
         for (group_name, measurement) in self.groups.iter() {
