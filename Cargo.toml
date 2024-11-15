@@ -1,6 +1,6 @@
 [package]
 name = "dotthz"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["Linus Leo Stöckli"]
 # repository = ""
@@ -16,12 +16,13 @@ license = "MIT"
 ndarray = "0.16"
 hdf5 = { package = "hdf5-metno", version = "0.9" }
 chrono = "0.4"
-indexmap = { version = "2.6"}
-serde = { version = "1.0", features = ["derive"], optional = true}
+indexmap = { version = "2.6" }
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [features]
 default = []
 serde = ["dep:serde", "indexmap/serde"]
+hdf5-sys-static = ["hdf5/static"]
 
 [dev-dependencies]
 tempfile = "3.14"
