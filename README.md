@@ -6,7 +6,7 @@ Load it in your `cargo.toml`
 
 ```toml
 [dependencies]
-dotthz-rs = "0.1.1"
+dotthz-rs = "0.1.2"
 ```
 
 and then use like specified in the following example:
