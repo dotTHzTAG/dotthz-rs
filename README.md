@@ -27,3 +27,6 @@ fn main() {
     file.save("test_files/output_file.thz");
 }
 ```
+
+Use the `hdf5-sys-static` feature to compile hdf5 and statically link it. This requires `cmake` to be installed.
+Use the `serde` feature to derive `Serialize` and `Deserialize` for `DotthzMetaData`.
