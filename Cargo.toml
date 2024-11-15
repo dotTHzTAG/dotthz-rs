@@ -23,6 +23,12 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 default = []
 serde = ["dep:serde", "indexmap/serde"]
 hdf5-sys-static = ["hdf5/static"]
+hdf5-blosc = ["hdf5/blosc"]
+hdf5-complex = ["hdf5/complex"]
+hdf5-f16 = ["hdf5/f16"]
+hdf5-lzf = ["hdf5/lzf"]
+hdf5-mpio = ["hdf5/mpio"]
+hdf5-zlib = ["hdf5/zlib"]
 
 [dev-dependencies]
 tempfile = "3.14"
