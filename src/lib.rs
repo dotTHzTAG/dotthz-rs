@@ -1,25 +1,41 @@
-//! Crate to load and save dotThz files in rust.
+//! Crate to load and save dotThz files in Rust.
 #![allow(dead_code)]
 #![deny(missing_docs)]
 #![deny(warnings)]
 
 mod dotthz;
-pub use dotthz::{DotthzFile, DotthzMeasurement, DotthzMetaData};
+pub use dotthz::{DotthzFile, DotthzMetaData};
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use dotthz::{DotthzFile, DotthzMeasurement, DotthzMetaData};
-    use indexmap::IndexMap;
-    use ndarray::array;
+    use dotthz::{DotthzFile, DotthzMetaData};
+    use hdf5::Dataset;
+    use ndarray::{array, Array2};
     use std::path::PathBuf;
     use tempfile::NamedTempFile;
+
+    fn assert_datasets_equal(
+        ds1: &Dataset,
+        ds2: &Dataset,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let data1: Vec<f32> = ds1.read_raw()?;
+        let data2: Vec<f32> = ds2.read_raw()?;
+        assert_eq!(data1, data2, "Dataset contents differ");
+
+        let shape1 = ds1.shape();
+        let shape2 = ds2.shape();
+        assert_eq!(shape1, shape2, "Dataset shapes differ");
+
+        Ok(())
+    }
 
     #[test]
     fn test_copy_and_compare_dotthz_files() -> Result<(), Box<dyn std::error::Error>> {
         for path in [
             "test_files/PVDF_520um.thz",
             "test_files/2_VariableTemperature.thz",
+            "test_files/image.thz",
         ] {
             // Path to an existing test HDF5 file (replace this with an actual test file path)
             let original_file_path = PathBuf::from(path);
@@ -31,88 +47,48 @@ mod tests {
             let temp_file = NamedTempFile::new()?;
             let copy_file_path = temp_file.path().to_path_buf();
 
+            // Create the new temporary file
+            let mut output_dotthz = DotthzFile::create(&copy_file_path)?;
+
+            // Save the metadata to the new temporary file
+            let group_names = original_dotthz.get_group_names()?;
+            for group_name in group_names.iter() {
+                let group = original_dotthz.get_group(group_name)?;
+                let meta_data = original_dotthz.get_meta_data(&group.name())?;
+                output_dotthz.add_group(group_name, &meta_data)?;
+            }
+
             // Save the data to the new temporary file
-            original_dotthz.save(&copy_file_path)?;
+            let group_names = output_dotthz.get_group_names()?;
+            for group_name in group_names.iter() {
+                for dataset_name in original_dotthz.get_dataset_names(group_name)? {
+                    let dataset = original_dotthz.get_dataset(group_name, &dataset_name)?;
+                    let data = dataset.read_dyn::<f32>()?;
+                    output_dotthz.add_dataset(group_name, &dataset_name, data.view())?;
+                }
+            }
 
             // Load data from the new copy file
             let copied_dotthz = DotthzFile::load(&copy_file_path)?;
 
-            // Compare the original and copied Dotthz structures
-            assert_eq!(original_dotthz.groups.len(), copied_dotthz.groups.len());
+            for old_group in original_dotthz.get_groups()? {
+                let new_group = copied_dotthz.get_group(&old_group.name())?;
+                // Compare the original and copied metadata
+                assert_eq!(
+                    original_dotthz.get_meta_data(&old_group.name())?,
+                    copied_dotthz.get_meta_data(&new_group.name())?
+                );
+            }
 
-            for (group_name, original_measurement) in &original_dotthz.groups {
-                let copied_measurement = copied_dotthz
-                    .groups
-                    .get(group_name)
-                    .expect("Group not found");
+            let group_names = output_dotthz.get_group_names()?;
+            for group_name in group_names.iter() {
+                for dataset_name in output_dotthz.get_dataset_names(group_name)? {
+                    let old_dataset = original_dotthz.get_dataset(group_name, &dataset_name)?;
+                    let new_dataset = copied_dotthz.get_dataset(group_name, &dataset_name)?;
 
-                // Compare metadata
-                assert_eq!(
-                    original_measurement.meta_data.user,
-                    copied_measurement.meta_data.user
-                );
-                assert_eq!(
-                    original_measurement.meta_data.email,
-                    copied_measurement.meta_data.email
-                );
-                assert_eq!(
-                    original_measurement.meta_data.orcid,
-                    copied_measurement.meta_data.orcid
-                );
-                assert_eq!(
-                    original_measurement.meta_data.institution,
-                    copied_measurement.meta_data.institution
-                );
-                assert_eq!(
-                    original_measurement.meta_data.description,
-                    copied_measurement.meta_data.description
-                );
-                assert_eq!(
-                    original_measurement.meta_data.version,
-                    copied_measurement.meta_data.version
-                );
-                assert_eq!(
-                    original_measurement.meta_data.mode,
-                    copied_measurement.meta_data.mode
-                );
-                assert_eq!(
-                    original_measurement.meta_data.instrument,
-                    copied_measurement.meta_data.instrument
-                );
-                assert_eq!(
-                    original_measurement.meta_data.time,
-                    copied_measurement.meta_data.time
-                );
-                assert_eq!(
-                    original_measurement.meta_data.date,
-                    copied_measurement.meta_data.date
-                );
-
-                // Compare the metadata's key-value pairs
-                assert_eq!(
-                    original_measurement.meta_data.md.len(),
-                    copied_measurement.meta_data.md.len()
-                );
-                for (key, original_value) in &original_measurement.meta_data.md {
-                    let copied_value = copied_measurement
-                        .meta_data
-                        .md
-                        .get(key)
-                        .expect("Metadata key not found");
-                    assert_eq!(original_value, copied_value);
-                }
-
-                // Compare datasets
-                assert_eq!(
-                    original_measurement.datasets.len(),
-                    copied_measurement.datasets.len()
-                );
-                for (dataset_name, original_dataset) in &original_measurement.datasets {
-                    let copied_dataset = copied_measurement
-                        .datasets
-                        .get(dataset_name)
-                        .expect("Dataset not found");
-                    assert_eq!(original_dataset, copied_dataset);
+                    // Compare the original and copied datasets
+                    assert_eq!(old_dataset.shape(), new_dataset.shape());
+                    assert_datasets_equal(&old_dataset, &new_dataset)?;
                 }
             }
         }
@@ -126,18 +102,17 @@ mod tests {
         let temp_file = NamedTempFile::new()?;
         let path: PathBuf = temp_file.path().to_path_buf();
 
-        // Initialize test data for Dotthz
-        let mut datasets = IndexMap::new();
-        datasets.insert("ds1".to_string(), array![[1.0, 2.0], [3.0, 4.0]]);
+        // Initialize test metadata and data
         let meta_data = DotthzMetaData {
             user: "Test User".to_string(),
             email: "test@example.com".to_string(),
             orcid: "0000-0001-2345-6789".to_string(),
             institution: "Test Institute".to_string(),
             description: "Test description".to_string(),
-            md: [("md1".to_string(), "Thickness (mm)".to_string())]
+            md: [("Thickness (mm)".to_string(), "0.52".to_string())]
                 .into_iter()
                 .collect(),
+            ds_description: vec!["ds1".to_string()],
             version: "1.0".to_string(),
             mode: "Test mode".to_string(),
             instrument: "Test instrument".to_string(),
@@ -145,96 +120,40 @@ mod tests {
             date: "2024-11-08".to_string(),
         };
 
-        let mut groups = IndexMap::new();
-        groups.insert(
-            "group1".to_string(),
-            DotthzMeasurement {
-                datasets,
-                meta_data,
-            },
-        );
+        // Initialize a dataset
+        let mut original_dotthz = DotthzFile::create(&path)?;
+        let group_name = "Measurement".to_string();
+        original_dotthz.add_group(&group_name, &meta_data)?;
 
-        let file_to_write = DotthzFile { groups };
+        let dataset_name = "test_dataset".to_string();
+        let dataset_data: Array2<f32> = array![[1.0, 2.0], [3.0, 4.0], [3.0, 4.0]];
 
-        // Save to the temporary file
-        file_to_write.save(&path)?;
+        original_dotthz.add_dataset(&group_name, &dataset_name, dataset_data.view())?;
 
-        // Load from the temporary file
-        let loaded_file = DotthzFile::load(&path)?;
+        // Load data from the new copy file
+        let copied_dotthz = DotthzFile::load(&path)?;
 
-        // Compare original and loaded data
-        assert_eq!(file_to_write.groups.len(), loaded_file.groups.len());
+        for (old_group, new_group) in original_dotthz
+            .get_groups()?
+            .iter()
+            .zip(copied_dotthz.get_groups()?.iter())
+        {
+            // Compare the original and copied metadata
+            assert_eq!(
+                original_dotthz.get_meta_data(&old_group.name())?,
+                copied_dotthz.get_meta_data(&new_group.name())?
+            );
+        }
 
-        for (group_name, measurement) in &file_to_write.groups {
-            let loaded_measurement = loaded_file.groups.get(group_name).expect("Group not found");
+        let group_names = original_dotthz.get_group_names()?;
+        for group_name in group_names.iter() {
+            for dataset_name in original_dotthz.get_dataset_names(group_name)? {
+                let old_dataset = original_dotthz.get_dataset(group_name, &dataset_name)?;
+                let new_dataset = copied_dotthz.get_dataset(group_name, &dataset_name)?;
 
-            // Compare metadata
-            assert_eq!(
-                measurement.meta_data.user,
-                loaded_measurement.meta_data.user
-            );
-            assert_eq!(
-                measurement.meta_data.email,
-                loaded_measurement.meta_data.email
-            );
-            assert_eq!(
-                measurement.meta_data.orcid,
-                loaded_measurement.meta_data.orcid
-            );
-            assert_eq!(
-                measurement.meta_data.institution,
-                loaded_measurement.meta_data.institution
-            );
-            assert_eq!(
-                measurement.meta_data.description,
-                loaded_measurement.meta_data.description
-            );
-            assert_eq!(
-                measurement.meta_data.version,
-                loaded_measurement.meta_data.version
-            );
-            assert_eq!(
-                measurement.meta_data.mode,
-                loaded_measurement.meta_data.mode
-            );
-            assert_eq!(
-                measurement.meta_data.instrument,
-                loaded_measurement.meta_data.instrument
-            );
-            assert_eq!(
-                measurement.meta_data.time,
-                loaded_measurement.meta_data.time
-            );
-            assert_eq!(
-                measurement.meta_data.date,
-                loaded_measurement.meta_data.date
-            );
-
-            // Compare mds
-            assert_eq!(
-                measurement.meta_data.md.len(),
-                loaded_measurement.meta_data.md.len()
-            );
-            for (dataset_name, dataset) in &measurement.meta_data.md {
-                let loaded_dataset = loaded_measurement
-                    .meta_data
-                    .md
-                    .get(dataset_name)
-                    .expect("Md not found");
-                assert_eq!(dataset, loaded_dataset);
-            }
-
-            // Compare datasets
-            assert_eq!(
-                measurement.datasets.len(),
-                loaded_measurement.datasets.len()
-            );
-            for (dataset_name, dataset) in &measurement.datasets {
-                let loaded_dataset = loaded_measurement
-                    .datasets
-                    .get(dataset_name)
-                    .expect("Dataset not found");
-                assert_eq!(dataset, loaded_dataset);
+                // Compare the original and copied datasets
+                assert_eq!(old_dataset.shape(), new_dataset.shape());
+                assert_datasets_equal(&old_dataset, &new_dataset)?;
             }
         }
 
