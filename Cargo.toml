@@ -1,6 +1,6 @@
 [package]
 name = "dotthz"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 authors = ["Linus Leo Stöckli"]
 # repository = ""
@@ -9,7 +9,7 @@ readme = "README.md"
 keywords = ["dotThz", "Thz-spectroscopy", "io"]
 categories = ["filesystem"]
 documentation = "https://docs.rs/dotthz-rs"
-# homepage = ""
+homepage = "https://github.com/hacknus/dotthz-rs"
 license = "MIT"
 
 [dependencies]
