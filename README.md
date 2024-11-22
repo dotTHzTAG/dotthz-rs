@@ -20,10 +20,7 @@ fn main() {
     let file_path = PathBuf::new("test_files/2_VariableTemperature.thz");
     let file = DotthzFile::create(&file_path);
     
-    // do stuff with the file
-    // ...
-
-    // Initialize test metadata and data
+    // Initialize test metadata
     let meta_data = DotthzMetaData {
         user: "Test User".to_string(),
         email: "test@example.com".to_string(),
@@ -41,17 +38,35 @@ fn main() {
         date: "2024-11-08".to_string(),
     };
 
-    // Initialize a dataset
+    // create a group with metadata
     let mut original_dotthz = DotthzFile::create(&path)?;
     let group_name = "Measurement".to_string();
     original_dotthz.add_group(&group_name, &meta_data)?;
 
+    // write data
     let dataset_name = "test_dataset".to_string();
     let dataset_data: Array2<f32> = array![[1.0, 2.0], [3.0, 4.0], [3.0, 4.0]];
 
     original_dotthz.add_dataset(&group_name, &dataset_name, dataset_data.view())?;
     
     // data is now already saved to the file.
+    
+    
+    // Load data from the dotTHz file
+    let file = DotthzFile::load(&file_path)?;
+
+    for group in file
+        .get_groups()?
+    {
+        // Compare the original and copied metadata
+        let meta_data = file.get_meta_data(&group.name());
+        
+        for dataset in group.get_datasets() {
+            // do stuff with the loaded dataset
+            // ...
+        }
+        let data = file.get_dataset(&group.name(), &dataset_name);
+    }
 
 }
 ```

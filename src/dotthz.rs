@@ -5,9 +5,9 @@ use ndarray::ArrayView;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::error::Error;
+use std::fmt::Debug;
 use std::path::PathBuf;
 use std::str::FromStr;
-use std::fmt::Debug;
 
 /// Metadata associated with a dotThz measurement.
 #[derive(Default, Debug, Clone, PartialEq)]
@@ -57,14 +57,14 @@ pub struct DotthzFile {
 }
 
 impl DotthzFile {
-    /// Create an empty DotthzFile to the specified path.
+    /// Create an empty `DotthzFile` to the specified path.
     pub fn create(path: &PathBuf) -> Result<Self, Box<dyn Error>> {
         // Create a new HDF5 file at the specified path
         let file = File::create(path)?;
         Ok(Self { file })
     }
 
-    /// Loads a DotthzFile from the specified path.
+    /// Loads a `DotthzFile` from the specified path.
     pub fn load(path: &PathBuf) -> Result<Self, Box<dyn Error>> {
         let file = File::open(path)?;
         Ok(DotthzFile { file })
@@ -72,11 +72,15 @@ impl DotthzFile {
 
     /// get group names
     pub fn get_group_names(&self) -> hdf5::Result<Vec<String>> {
-       Ok(self.file.groups()?.iter().map(|s| s.name())
+        Ok(self
+            .file
+            .groups()?
+            .iter()
+            .map(|s| s.name())
             .collect::<Vec<String>>())
     }
 
-    /// get group
+    /// get group by name
     pub fn get_group(&self, group_name: &str) -> hdf5::Result<Group> {
         self.file.group(group_name)
     }
@@ -97,12 +101,17 @@ impl DotthzFile {
             .collect::<Vec<String>>())
     }
 
-    /// get dataset
+    /// get dataset for a given group name by dataset name
     pub fn get_dataset(&self, group_name: &str, dataset_name: &str) -> hdf5::Result<Dataset> {
         self.file.group(group_name)?.dataset(dataset_name)
     }
 
-    /// set meta data
+    /// get datasets for a given group name
+    pub fn get_datasets(&self, group_name: &str) -> hdf5::Result<Vec<Dataset>> {
+        self.file.group(group_name)?.datasets()
+    }
+
+    /// set meta-data for a given group
     pub fn set_meta_data(
         &self,
         group: &mut Group,
@@ -144,9 +153,9 @@ impl DotthzFile {
                 "{}/{}/{}/{}",
                 meta_data.orcid, meta_data.user, meta_data.email, meta_data.institution
             )
-                .as_str(),
+            .as_str(),
         )
-            .unwrap();
+        .unwrap();
 
         let attr = group.new_attr::<VarLenUnicode>().create("user")?;
         attr.write_scalar(&entry)?;
@@ -172,9 +181,7 @@ impl DotthzFile {
         }
 
         // Save dsDescription
-        let ds_descriptions = meta_data
-            .ds_description
-            .join(", ");
+        let ds_descriptions = meta_data.ds_description.join(", ");
         group
             .new_attr::<VarLenUnicode>()
             .shape(1)
@@ -183,11 +190,13 @@ impl DotthzFile {
         Ok(())
     }
 
-    /// extract meta data
+    /// extract meta-data for a given group by group name
     pub fn get_meta_data(&self, group_name: &str) -> hdf5::Result<DotthzMetaData> {
         let mut meta_data = DotthzMetaData::default();
 
-        if let Ok(instrument) = self.file.group(group_name)?
+        if let Ok(instrument) = self
+            .file
+            .group(group_name)?
             .attr("instrument")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -197,7 +206,9 @@ impl DotthzFile {
         }
 
         // Load dataset descriptions
-        if let Ok(ds_description) =  self.file.group(group_name)?
+        if let Ok(ds_description) = self
+            .file
+            .group(group_name)?
             .attr("dsDescription")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -208,7 +219,9 @@ impl DotthzFile {
             meta_data.ds_description = descriptions;
         }
 
-        if let Ok(md_description) =  self.file.group(group_name)?
+        if let Ok(md_description) = self
+            .file
+            .group(group_name)?
             .attr("mdDescription")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -226,7 +239,9 @@ impl DotthzFile {
 
             for (i, description) in descriptions.iter().enumerate() {
                 // now read the mds
-                if let Ok(md) =  self.file.group(group_name)?
+                if let Ok(md) = self
+                    .file
+                    .group(group_name)?
                     .attr(format!("md{}", i + 1).as_str())
                     .and_then(|a| a.read_raw::<f32>())
                 {
@@ -236,7 +251,9 @@ impl DotthzFile {
                             .insert(description.to_string(), format!("{}", md));
                     }
                 }
-                if let Ok(md) =  self.file.group(group_name)?
+                if let Ok(md) = self
+                    .file
+                    .group(group_name)?
                     .attr(format!("md{}", i + 1).as_str())
                     .and_then(|a| a.read_raw::<VarLenUnicode>())
                 {
@@ -249,7 +266,9 @@ impl DotthzFile {
             }
         }
 
-        if let Ok(mode) =  self.file.group(group_name)?
+        if let Ok(mode) = self
+            .file
+            .group(group_name)?
             .attr("mode")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -258,7 +277,9 @@ impl DotthzFile {
             }
         }
 
-        if let Ok(version) =  self.file.group(group_name)?
+        if let Ok(version) = self
+            .file
+            .group(group_name)?
             .attr("thzVer")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -267,7 +288,9 @@ impl DotthzFile {
             }
         }
 
-        if let Ok(time) =  self.file.group(group_name)?
+        if let Ok(time) = self
+            .file
+            .group(group_name)?
             .attr("time")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -276,7 +299,9 @@ impl DotthzFile {
             }
         }
 
-        if let Ok(user_info) =  self.file.group(group_name)?
+        if let Ok(user_info) = self
+            .file
+            .group(group_name)?
             .attr("user")
             .and_then(|a| a.read_raw::<VarLenUnicode>())
         {
@@ -299,7 +324,7 @@ impl DotthzFile {
         Ok(meta_data)
     }
 
-    /// Add a group with metadata to the DotthzFile.
+    /// Add a group with meta-data and group name to the `DotthzFile`.
     pub fn add_group(
         &mut self,
         group_name: &str,
@@ -310,7 +335,7 @@ impl DotthzFile {
         Ok(group)
     }
 
-    /// Add a dataset to a given group.
+    /// Add a dataset to a given group by group name and dataset name.
     pub fn add_dataset<T, D>(
         &mut self,
         group_name: &str,
