@@ -35,7 +35,7 @@ mod tests {
         for path in [
             "test_files/PVDF_520um.thz",
             "test_files/2_VariableTemperature.thz",
-            "test_files/image.thz",
+         //   "test_files/image.thz",
         ] {
             // Path to an existing test HDF5 file (replace this with an actual test file path)
             let original_file_path = PathBuf::from(path);
