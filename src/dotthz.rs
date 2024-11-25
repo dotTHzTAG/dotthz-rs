@@ -299,6 +299,17 @@ impl DotthzFile {
             }
         }
 
+        if let Ok(date) = self
+            .file
+            .group(group_name)?
+            .attr("date")
+            .and_then(|a| a.read_raw::<VarLenUnicode>())
+        {
+            if let Some(d) = date.first() {
+                meta_data.date = d.to_string();
+            }
+        }
+
         if let Ok(user_info) = self
             .file
             .group(group_name)?
