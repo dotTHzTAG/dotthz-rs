@@ -319,6 +319,9 @@ impl DotthzFile {
                 if let Some(part) = user_parts.get(2) {
                     meta_data.email = part.trim().into();
                 }
+                if let Some(part) = user_parts.get(3) {
+                    meta_data.institution = part.trim().into();
+                }
             }
         }
         Ok(meta_data)
