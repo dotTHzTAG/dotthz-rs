@@ -288,6 +288,17 @@ impl DotthzFile {
             }
         }
 
+        if let Ok(description) = self
+            .file
+            .group(group_name)?
+            .attr("description")
+            .and_then(|a| a.read_raw::<VarLenUnicode>())
+        {
+            if let Some(d) = description.first() {
+                meta_data.description = d.to_string();
+            }
+        }
+
         if let Ok(time) = self
             .file
             .group(group_name)?
