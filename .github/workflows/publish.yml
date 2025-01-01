@@ -12,6 +12,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
+      - name: Install libhdf5
+        run: sudo apt-get update && sudo apt-get install libhdf5-dev
+
       - name: Install stable toolchain
         uses: dtolnay/rust-toolchain@stable
 
