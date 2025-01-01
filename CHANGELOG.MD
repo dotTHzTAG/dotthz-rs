@@ -8,6 +8,10 @@ All notable changes to the `dotthz` crate will be documented in this file.
 
 * ...
 
+## 0.2.5
+
+* Minor clean up
+
 ## 0.2.4
 
 * Stable Version 
