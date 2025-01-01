@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install HDF5 and MPI
-        run: sudo apt-get update && sudo apt-get install libhdf5-dev && sudo apt-get install -y openmpi-bin openmpi-common libopenmpi-dev && sudo apt-get install -y libhdf5-mpi-dev
+      - name: Install HDF5, MPI and CMAKE
+        run: sudo apt-get update && sudo apt-get install -y libhdf5-dev openmpi-bin openmpi-common libopenmpi-dev libhdf5-mpi-dev cmake
 
       - name: Build
         run: cargo build --all --features "hdf5-lzf,hdf5-mpio,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
@@ -34,3 +34,15 @@ jobs:
 
       - name: Test
         run: cargo test --all --features "hdf5-lzf,hdf5-mpio,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
+
+      - name: Build with HDF5 static
+        run: cargo build --all --features "hdf5-lzf,hdf5-sys-static,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
+
+      - name: Cargo check with HDF5 static
+        run: cargo check --all --features "hdf5-lzf,hdf5-sys-static,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
+
+      - name: Clippy with HDF5 static
+        run: cargo clippy --all --all-targets --features "hdf5-lzf,hdf5-sys-static,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
+
+      - name: Test with HDF5 static
+        run: cargo test --all --features "hdf5-lzf,hdf5-sys-static,hdf5-zlib,hdf5-blosc,hdf5-f16,hdf5-complex,serde"
