@@ -192,36 +192,60 @@ impl DotthzFile {
         group: &mut Group,
         meta_data: &DotthzMetaData,
     ) -> Result<(), Box<dyn Error>> {
-        // Save metadata attributes
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("description")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.description)?)?;
+        // Save metadata attributes, create if they already exist
+        if let Ok(attr) = group.attr("description") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.description)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("description")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.description)?)?;
+        }
 
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("date")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.date)?)?;
+        if let Ok(attr) = group.attr("date") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.date)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("date")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.date)?)?;
+        }
 
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("instrument")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.instrument)?)?;
+        if let Ok(attr) = group.attr("instrument") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.instrument)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("instrument")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.instrument)?)?;
+        }
 
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("mode")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.mode)?)?;
+        if let Ok(attr) = group.attr("mode") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.mode)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("mode")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.mode)?)?;
+        }
 
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("thzVer")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.version)?)?;
+        if let Ok(attr) = group.attr("thzVer") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.version)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("thzVer")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.version)?)?;
+        }
 
-        group
-            .new_attr::<VarLenUnicode>()
-            .create("time")?
-            .write_scalar(&VarLenUnicode::from_str(&meta_data.time)?)?;
+        if let Ok(attr) = group.attr("time") {
+            attr.write_scalar(&VarLenUnicode::from_str(&meta_data.time)?)?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .create("time")?
+                .write_scalar(&VarLenUnicode::from_str(&meta_data.time)?)?;
+        }
 
         let entry = VarLenUnicode::from_str(
             format!(
@@ -232,8 +256,12 @@ impl DotthzFile {
         )
         .unwrap();
 
-        let attr = group.new_attr::<VarLenUnicode>().create("user")?;
-        attr.write_scalar(&entry)?;
+        if let Ok(attr) = group.attr("user") {
+            attr.write_scalar(&entry)?;
+        } else {
+            let attr = group.new_attr::<VarLenUnicode>().create("user")?;
+            attr.write_scalar(&entry)?;
+        }
 
         // Save additional metadata
         let md_descriptions = meta_data
@@ -242,26 +270,40 @@ impl DotthzFile {
             .cloned()
             .collect::<Vec<String>>()
             .join(", ");
-        group
-            .new_attr::<VarLenUnicode>()
-            .shape(1)
-            .create("mdDescription")?
-            .write(&[VarLenUnicode::from_str(&md_descriptions)?])?;
 
-        for (i, (_key, value)) in meta_data.md.iter().enumerate() {
+        if let Ok(attr) = group.attr("mdDescription") {
+            attr.write(&[VarLenUnicode::from_str(&md_descriptions)?])?;
+        } else {
             group
                 .new_attr::<VarLenUnicode>()
-                .create(format!("md{}", i + 1).as_str())?
-                .write_scalar(&VarLenUnicode::from_str(value)?)?;
+                .shape(1)
+                .create("mdDescription")?
+                .write(&[VarLenUnicode::from_str(&md_descriptions)?])?;
+        }
+
+        for (i, (_key, value)) in meta_data.md.iter().enumerate() {
+            if let Ok(attr) = group.attr(format!("md{}", i + 1).as_str()) {
+                attr.write_scalar(&VarLenUnicode::from_str(value)?)?;
+            } else {
+                group
+                    .new_attr::<VarLenUnicode>()
+                    .create(format!("md{}", i + 1).as_str())?
+                    .write_scalar(&VarLenUnicode::from_str(value)?)?;
+            }
         }
 
         // Save dsDescription
         let ds_descriptions = meta_data.ds_description.join(", ");
-        group
-            .new_attr::<VarLenUnicode>()
-            .shape(1)
-            .create("dsDescription")?
-            .write(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
+
+        if let Ok(attr) = group.attr("dsDescription") {
+            attr.write(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
+        } else {
+            group
+                .new_attr::<VarLenUnicode>()
+                .shape(1)
+                .create("dsDescription")?
+                .write(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
+        }
         Ok(())
     }
 
