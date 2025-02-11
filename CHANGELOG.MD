@@ -8,6 +8,11 @@ All notable changes to the `dotthz` crate will be documented in this file.
 
 * ...
 
+## 0.2.7
+
+### Added:
+* `set_meta_data()` will now update existing attributes
+
 ## 0.2.6
 
 ### Added: 
