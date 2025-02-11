@@ -1,12 +1,13 @@
+use hdf5::file::{FileAccess, FileCreate};
 use hdf5::types::VarLenUnicode;
-use hdf5::{Dataset, File, Group, H5Type};
+use hdf5::{Dataset, File, Group, H5Type, OpenMode};
 use indexmap::IndexMap;
 use ndarray::ArrayView;
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::fmt::Debug;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::str::FromStr;
 
 /// Metadata associated with a dotThz measurement.
@@ -57,19 +58,93 @@ pub struct DotthzFile {
 }
 
 impl DotthzFile {
-    /// Create an empty `DotthzFile` to the specified path.
+    /// Create an empty `DotthzFile` to the specified path, truncates if exists.
     pub fn create(path: &PathBuf) -> Result<Self, Box<dyn Error>> {
         // Create a new HDF5 file at the specified path
         let file = File::create(path)?;
         Ok(Self { file })
     }
 
-    /// Loads a `DotthzFile` from the specified path.
-    pub fn load(path: &PathBuf) -> Result<Self, Box<dyn Error>> {
-        let file = File::open(path)?;
+    /// Loads a `DotthzFile` from the specified path as read-only, file must exist.
+    pub fn open(filename: &PathBuf) -> Result<Self, Box<dyn Error>> {
+        let file = File::open(filename)?;
         Ok(DotthzFile { file })
     }
 
+    /// Opens a file as read/write, file must exist.
+    pub fn open_rw<P: AsRef<Path>>(filename: P) -> Result<Self, Box<dyn Error>> {
+        let file = File::open_rw(filename)?;
+        Ok(DotthzFile { file })
+    }
+
+    /// Creates a file, fails if exists.
+    pub fn create_excl<P: AsRef<Path>>(filename: P) -> Result<Self, Box<dyn Error>> {
+        let file = File::create_excl(filename)?;
+        Ok(DotthzFile { file })
+    }
+
+    /// Opens a file as read/write if exists, creates otherwise.
+    pub fn append<P: AsRef<Path>>(filename: P) -> Result<Self, Box<dyn Error>> {
+        let file = File::append(filename)?;
+        Ok(DotthzFile { file })
+    }
+
+    /// Opens a file in a given mode.
+    pub fn open_as<P: AsRef<Path>>(filename: P, mode: OpenMode) -> Result<Self, Box<dyn Error>> {
+        let file = File::open_as(filename, mode)?;
+        Ok(DotthzFile { file })
+    }
+
+    /// Returns the file size in bytes (or 0 if the file handle is invalid).
+    pub fn size(&self) -> u64 {
+        self.file.size()
+    }
+
+    /// Returns the free space in the file in bytes (or 0 if the file handle is invalid).
+    pub fn free_space(&self) -> u64 {
+        self.file.free_space()
+    }
+
+    /// Returns true if the file was opened in a read-only mode.
+    pub fn is_read_only(&self) -> bool {
+        self.file.is_read_only()
+    }
+
+    /// Returns the userblock size in bytes (or 0 if the file handle is invalid).
+    pub fn userblock(&self) -> u64 {
+        self.file.userblock()
+    }
+
+    /// Flushes the file to the storage medium.
+    pub fn flush(&self) -> Result<(), Box<dyn Error>> {
+        self.file.flush()?;
+        Ok(())
+    }
+
+    /// Closes the file and invalidates all open handles for contained objects.
+    pub fn close(self) -> Result<(), Box<dyn Error>> {
+        self.file.close()?;
+        Ok(())
+    }
+
+    /// Returns a copy of the file access property list.
+    pub fn access_plist(&self) -> hdf5::Result<FileAccess> {
+        self.file.access_plist()
+    }
+
+    /// A short alias for `access_plist()`.
+    pub fn fapl(&self) -> hdf5::Result<FileAccess> {
+        self.file.access_plist()
+    }
+    /// Returns a copy of the file creation property list.
+    pub fn create_plist(&self) -> hdf5::Result<FileCreate> {
+        self.file.create_plist()
+    }
+
+    /// A short alias for `create_plist()`.
+    pub fn fcpl(&self) -> hdf5::Result<FileCreate> {
+        self.file.create_plist()
+    }
     /// get group names
     pub fn get_group_names(&self) -> hdf5::Result<Vec<String>> {
         Ok(self

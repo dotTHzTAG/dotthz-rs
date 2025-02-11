@@ -56,7 +56,7 @@ fn main() {
     
     
     // Load data from the dotTHz file
-    let file = DotthzFile::load(&file_path)?;
+    let file = DotthzFile::open(&file_path)?;
 
     for group in file
         .get_groups()?

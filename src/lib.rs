@@ -41,7 +41,7 @@ mod tests {
             let original_file_path = PathBuf::from(path);
 
             // Load data from the original file
-            let original_dotthz = DotthzFile::load(&original_file_path)?;
+            let original_dotthz = DotthzFile::open(&original_file_path)?;
 
             // Create a temporary file to save the copy
             let temp_file = NamedTempFile::new()?;
@@ -69,7 +69,7 @@ mod tests {
             }
 
             // Load data from the new copy file
-            let copied_dotthz = DotthzFile::load(&copy_file_path)?;
+            let copied_dotthz = DotthzFile::open(&copy_file_path)?;
 
             for old_group in original_dotthz.get_groups()? {
                 let new_group = copied_dotthz.get_group(&old_group.name())?;
@@ -131,7 +131,7 @@ mod tests {
         original_dotthz.add_dataset(&group_name, &dataset_name, dataset_data.view())?;
 
         // Load data from the new copy file
-        let copied_dotthz = DotthzFile::load(&path)?;
+        let copied_dotthz = DotthzFile::open(&path)?;
 
         for (old_group, new_group) in original_dotthz
             .get_groups()?
