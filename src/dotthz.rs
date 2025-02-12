@@ -272,18 +272,21 @@ impl DotthzFile {
             .join(", ");
 
         if let Ok(attr) = group.attr("mdDescription") {
-            attr.write(&[VarLenUnicode::from_str(&md_descriptions)?])?;
+            attr.write_raw(&[VarLenUnicode::from_str(&md_descriptions)?])?;
         } else {
             group
                 .new_attr::<VarLenUnicode>()
-                .shape(1)
                 .create("mdDescription")?
-                .write(&[VarLenUnicode::from_str(&md_descriptions)?])?;
+                .write_raw(&[VarLenUnicode::from_str(&md_descriptions)?])?;
         }
 
         for (i, (_key, value)) in meta_data.md.iter().enumerate() {
             if let Ok(attr) = group.attr(format!("md{}", i + 1).as_str()) {
-                attr.write_scalar(&VarLenUnicode::from_str(value)?)?;
+                if let Ok(parsed) = value.parse::<f32>() {
+                    attr.write_scalar(&parsed)?;
+                } else {
+                    attr.write_scalar(&VarLenUnicode::from_str(value)?)?;
+                }
             } else {
                 group
                     .new_attr::<VarLenUnicode>()
@@ -296,13 +299,12 @@ impl DotthzFile {
         let ds_descriptions = meta_data.ds_description.join(", ");
 
         if let Ok(attr) = group.attr("dsDescription") {
-            attr.write(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
+            attr.write_raw(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
         } else {
             group
                 .new_attr::<VarLenUnicode>()
-                .shape(1)
                 .create("dsDescription")?
-                .write(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
+                .write_raw(&[VarLenUnicode::from_str(&ds_descriptions)?])?;
         }
         Ok(())
     }
