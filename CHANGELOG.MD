@@ -8,6 +8,12 @@ All notable changes to the `dotthz` crate will be documented in this file.
 
 * ...
 
+## 0.2.8
+
+### Added:
+* fix the reading/writing types, bug fix for updating meta-data
+
+
 ## 0.2.7
 
 ### Added:
