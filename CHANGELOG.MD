@@ -8,7 +8,7 @@ All notable changes to the `dotthz` crate will be documented in this file.
 
 * ...
 
-## 0.2.9
+## 0.2.10
 
 ### Added:
 * ability to delete a meta-data attribute from a group
