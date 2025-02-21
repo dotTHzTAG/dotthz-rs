@@ -468,6 +468,16 @@ impl DotthzFile {
         Ok(meta_data)
     }
 
+    /// remove a meta_data attribute
+
+    pub fn remove_meta_data_attribute(
+        &mut self,
+        group_name: &str,
+        attr_name: &str,
+    ) -> hdf5::Result<()> {
+        self.file.group(group_name)?.delete_attr(attr_name)
+    }
+
     /// Add a group with meta-data and group name to the `DotthzFile`.
     pub fn add_group(
         &mut self,
