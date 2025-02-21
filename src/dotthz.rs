@@ -186,13 +186,24 @@ impl DotthzFile {
         self.file.group(group_name)?.datasets()
     }
 
+    /// clear the meta-data for a given group
+    pub fn clear_meta_data(&self, group_name: &str) -> hdf5::Result<()> {
+        // delete all existing attributes
+        if let Ok(names) = self.get_group(group_name)?.attr_names() {
+            for attr in names {
+                self.get_group(group_name)?.delete_attr(&attr)?;
+            }
+        }
+        Ok(())
+    }
+
     /// set meta-data for a given group
     pub fn set_meta_data(
         &self,
         group: &mut Group,
         meta_data: &DotthzMetaData,
     ) -> Result<(), Box<dyn Error>> {
-        // Save metadata attributes, create if they already exist
+        // Save metadata attributes, create if they don't already exist
         if let Ok(attr) = group.attr("description") {
             attr.write_scalar(&VarLenUnicode::from_str(&meta_data.description)?)?;
         } else {
