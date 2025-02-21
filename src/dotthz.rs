@@ -469,7 +469,6 @@ impl DotthzFile {
     }
 
     /// remove a meta_data attribute
-
     pub fn remove_meta_data_attribute(
         &mut self,
         group_name: &str,
