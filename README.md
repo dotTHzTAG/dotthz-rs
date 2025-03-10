@@ -1,7 +1,7 @@
 # Interface with dotThz files using rust
 [![crates.io](https://img.shields.io/crates/v/dotthz.svg)](https://crates.io/crates/dotthz)
 [![Docs](https://docs.rs/dotthz/badge.svg)](https://docs.rs/dotthz)
-[![Rust](https://github.com/hacknus/dotthz-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/hacknus/dotthz-rs/actions/workflows/rust.yml)
+[![Rust](https://github.com/dotTHzTAG/dotthz-rs/actions/workflows/rust.yml/badge.svg)](https://github.com/dotTHzTAG/dotthz-rs/actions/workflows/rust.yml)
 
 This crate provides an easy way to interface with [dotThz](https://github.com/dotTHzTAG) files in rust.
 
