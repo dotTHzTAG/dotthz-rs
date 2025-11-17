@@ -1,6 +1,6 @@
 [package]
 name = "dotthz"
-version = "0.2.11"
+version = "0.2.12"
 edition = "2021"
 authors = ["Linus Leo Stöckli"]
 repository = "https://github.com/dotTHzTAG/dotthz-rs"
@@ -13,7 +13,7 @@ homepage = "https://github.com/dotTHzTAG/dotthz-rs"
 license = "MIT"
 
 [dependencies]
-ndarray = "0.16"
+ndarray = "0.17.1"
 hdf5 = { package = "hdf5-metno", version = "0.10.1" }
 indexmap = { version = "2.7" }
 serde = { version = "1.0", features = ["derive"], optional = true }
