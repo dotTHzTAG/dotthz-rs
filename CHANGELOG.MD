@@ -8,6 +8,12 @@ All notable changes to the `dotthz` crate will be documented in this file.
 
 * ...
 
+## 0.3.0
+
+### Added:
+* updated to ndarray 0.17
+
+
 ## 0.2.10
 
 ### Added:
