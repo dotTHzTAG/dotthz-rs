@@ -9,7 +9,7 @@ Load it in your `cargo.toml`
 
 ```toml
 [dependencies]
-dotthz-rs = "0.2.8"
+dotthz-rs = "0.3"
 ```
 
 and then use like specified in the following example:
